@@ -84,9 +84,12 @@ if outFile == '':
 # Store information about an image
 class Sprite:
     def __init__(self, f):
+        self._name = f
         self._img = Image.open(f)
         self._w, self._h = self._img.size
         self._area = self._w * self._h
+        log.info('Loaded %s: %dx%d, area: %d' % (f, self._w, self._h, self._area))
+
     def __lt__(self, b):
         return self._area < b._area
     def __le__(self, b):
@@ -99,6 +102,18 @@ class Sprite:
     @property
     def area(self):
         return self._area
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def width(self):
+        return self._w
+
+    @property
+    def height(self):
+        return self._h
 
     @property
     def img(self):
@@ -117,13 +132,17 @@ class SpriteSheet:
         log.info('Total area: %d'%totalArea)
 
     def save(self):
-        w = 300
-        h = self._sprites[0].img.size[1]
-        result = Image.new("RGBA", (w, h))
+        w = sum([s.width for s in self._sprites])
+        h = max([s.height for s in self._sprites])
+        result = Image.new('RGBA', (w, h))
         x = 0
+        log.info('Generating the SpriteSheet %dx%d'%(w, h))
         for i in self._sprites:
-            result.paste(i, (x, 0))
-            x += i.size[0]
+            log.info('Adding %s' % i.name)
+            result.paste(i._img, (x, 0))
+            x += i.width
+        log.info('Saving %s'%outFile)
+        result.save(outFile)
 
 
 log.info('Loading %d images'%len(args))
@@ -131,5 +150,3 @@ ss = SpriteSheet(args, outFile)
 
 ss.save()
 
-log.info('Saving %s'%outFile)
-result.save(outFile)
